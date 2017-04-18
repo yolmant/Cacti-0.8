@@ -1,0 +1,44 @@
+#!/bin/bash
+
+#install all the packages necesary for cacti server
+yum -y install cacti mariadb-server php-process php-gd
+
+#turn off SE linux
+setenforce 0
+
+#enable and start HTTP, SNMP and db services
+systemctl enable httpd snmpd mariadb
+systemctl start httpd snmpd mariadb
+
+#set the database
+mysqladmin -u root password 123456
+mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -p123456 mysql
+
+#create a sql file
+sh -c 'cat > ~/script.sql' << EF
+GRANT ALL ON cacti.* TO cacti@localhost IDENTIFIED BY '123456';
+FLUSH privileges;
+
+GRANT SELECT ON mysql.time_zone_name TO cacti@localhost;
+flush privileges;
+EF
+
+#run the sql file to the database
+mysql -u root -p123456 < ~/script.sql
+
+#run the cacti sql file
+mysql -u cacti -p123456 cacti < /usr/share/doc/cacti-1.0.4/cacti.sql
+
+#modifying cacti.conf to have access
+sed -i 's,Require host localhost,Require host 10.138.0.0/24,g' /etc/httpd/conf.d/cacti.con
+sed -i 's,Allow from localhost,Allow from 10.138.0.0/24,g' /etc/httpd/conf.d/cacti.con
+
+#modify db.php
+sed -i 's/$database_username = "cactiuser";/$database_username = "cacti";/' /etc/cacti/db/php
+sed -i 's/$database_password = "cactipass";/$database_password = "P@ssw0rd1";/' /etc/cacti/db/php
+
+# uncomment cronjob for cacti to poll every 5 minutes
+sed -i 's/#//g' /etc/cron.d/cacti
+
+#set the timezone support
+sed -i 's,;date.timezone = ,date.timezone = America/Regina,g' /etc/php.ini
