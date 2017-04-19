@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#intall packages 
+yum -y install net-snmp net-snmp-utils
+
+#modify SNMP file
+sh -c 'cat > /etc/snmp/snmpd.conf' << EF
+#hellow
+# A user 'myUser' is being defined with the community string 'myNetwork' and source network 10.128.0.0/24
+com2sec myUser 10.128.0.0/24 myNetwork
+
+# myUser is added into the group 'myGroup' and the permission of the group is defined
+group    myGroup    v1        myUser
+group    myGroup    v2c        myUser
+view all included .1
+access myGroup    ""    any    noauth     exact    all    all    none
+EF
+
+#enable and start snmp service
+systemctl enable snmpd
+systemctl start snmpd
+
+#maintain snmp on
+chkconfig snmpd on
