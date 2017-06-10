@@ -31,7 +31,7 @@ mysql -u root -p123456 < ~/script.sql
 mysql -u cacti -p123456 cacti < /usr/share/doc/cacti-1.0.4/cacti.sql
 
 #modifying cacti.conf to have access
-sed -i 's,Require host localhost,Require host all granted,g' /etc/httpd/conf.d/cacti.conf
+sed -i 's,Require host localhost,Require all granted,g' /etc/httpd/conf.d/cacti.conf
 sed -i 's,Allow from localhost,Allow from all,g' /etc/httpd/conf.d/cacti.conf
 
 #modify db.php
