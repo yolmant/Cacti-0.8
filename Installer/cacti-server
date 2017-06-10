@@ -43,3 +43,6 @@ sed -i 's/#//g' /etc/cron.d/cacti
 
 #set the timezone support
 sed -i 's/;date.timezone =/date.timezone = America\/Regina/' /etc/php.ini
+
+#restart apache
+systemctl restart httpd
